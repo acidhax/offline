@@ -1,0 +1,37 @@
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        <script async src="index.web.js"></script>
+        <script src='EventEmitter/EventEmitter.min.js'></script>
+        <script src="rxjs.umd.min.js"></script>
+        <script src="Application.js"></script>
+        <title>Offline GIF - Converting your GIFs to Videos</title>
+        <script
+			  src="jquery-3.3.1.min.js"
+			  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+			  crossorigin="anonymous"></script>
+        <link rel="stylesheet" type="text/css" href="index.css" />
+    </head>
+    <body>
+        <header>
+            <h1>Converting a Video to a GIF is done completely in your browser.</h1>
+            <summary>Completely Secure. Completely offline.</summary>
+        </header>
+        <main>
+            <form class="box" method="post" action="" enctype="multipart/form-data">
+                <div class="box__input upload-btn-wrapper">
+                    <button class="btn">Drop a video</button>
+                    <input class="box__file" type="file" name="files[]" id="file" data-multiple-caption="{count} files selected" multiple />
+                </div>
+                <div class="box__uploading">Uploading&hellip;</div>
+                <div class="box__success">Done!</div>
+                <div class="box__error">Error! <span></span>.</div>
+            </form>
+            <div class="worker-space">
+                
+            </div>
+        </main>
+        <script async src="main.js"></script>
+        <script async src="VideoWorker.js"></script>
+    </body>
+</html>

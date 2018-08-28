@@ -1,0 +1,16 @@
+{
+  "name": "offlinegif.com",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "ffmpeg.js": "git+https://github.com/hperrin/ffmpeg.js.git",
+    "rxjs": "^6.2.2"
+  },
+  "devDependencies": {},
+  "description": ""
+}
