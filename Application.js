@@ -1,33 +1,78 @@
-const { BehaviorSubject, of, fromEvent, from } = rxjs;
+const { BehaviorSubject, of, fromEvent, from, combineLatest } = rxjs;
 const { map, filter, flatMap, merge } = rxjs.operators;
 
 class Application {
     constructor(form, workerSpace) {
         this.form = form
         this.workerSpace = workerSpace
-        this.workers = new BehaviorSubject([])
+        this.workers = new rxjs.Subject()
         this.setupHandlers()
-
-        this.setupWorkerSpace()
     }
 
-    setupWorkerSpace() {
-        this.workers.pipe(
-            flatMap((event) => {
-                return from(event)
+    setupWorker(worker) {
+        this.workerSpace.append(worker.element)
+        worker.element.loadTemplate("#processing-template", {
+            filename: worker.file.name
+        })
+
+        worker.addListener('progress', progress => {
+            if (worker.state == State.generatingPalette) {
+                // state updates are useless
+            } else if (worker.state == State.generatingImage) {
+                // state updates hell yes
+            }
+        })
+
+        combineLatest(worker.duration, worker.progress)
+            .subscribe(([duration, progress]) => {
+                let percentage = Math.min((progress / duration) * 100, 100)
+                // console.log(worker.state == State.generatingPalette, worker.state == State.generatingImage, duration, progress, percentage)
+                if (worker.state == State.generatingPalette) {
+                    // state updates are useless
+                } else if (worker.state == State.generatingImage) {
+                    // state updates yesh
+                    console.log("Encoding progress", progress)
+                    worker.element.loadTemplate($("#encoding-template"), {
+                        filename: worker.file.name,
+                        percentage: percentage
+                    })
+                    worker.element.find(".meter span").css("width", percentage+"%");
+                }
             })
-            ,filter(event => {
-                console.log("event", event)
-                return event.element == null
-            }),
-            flatMap(worker => {
-                worker.element = $('<div class="worker"></div>')
-                return worker.state()
+
+        worker.addListener('duration', progress => {
+            
+        })
+
+        worker.addListener('paletteGenerateStarted', event => {
+            // palette started, show palette generating mode
+            worker.element.addClass('palette-generating');
+        })
+        worker.addListener('palette', event => {
+            // palette created, set palette mode
+            worker.element.removeClass('palette-generating');
+            worker.element.addClass('palette-created');
+            worker.element.loadTemplate("#processed-template", {
+                filename: worker.file.name
             })
-        )
-        .subscribe((worker) => {
-            console.log("OnNext", worker)
-            this.workerSpace.append(worker.element)
+        })
+        worker.addListener('createStarted', event => {
+            // create started, set progress mode
+            worker.element.removeClass('palette-created');
+            worker.element.addClass('gif-generating');
+        })
+
+        worker.addListener("create", msg => {
+            worker.element.removeClass('gif-generating');
+            worker.element.addClass('gif-created');
+            console.log(msg)
+            var myArray = msg.data; // is a UInt8Array
+            var blob = new Blob([myArray], {'type': 'image/gif'});
+            var url = URL.createObjectURL(blob);
+            worker.element.loadTemplate("#image-element", {
+                image: url,
+                filename: worker.file.name
+            })
         })
     }
 
@@ -45,49 +90,14 @@ class Application {
           .on('drop', (e) => {
             var droppedFiles = e.originalEvent.dataTransfer.files;
             console.log(droppedFiles)
-
-            let myworker = new VideoWorker(droppedFiles[0], $('<div class="worker"></div>'))
-            let newArray = this.workers.value
-            newArray.push(myworker)
-            this.workers.next(newArray)
-            
-            myworker.addListener('progress', event => {
-              console.log(event)
-            })
-            myworker.addListener('paletteGenerateStarted', event => {
-              // palette started, show palette generating mode
-              this.form.addClass('palette-generating');
-            })
-            myworker.addListener('palette', event => {
-              // palette created, set palette mode
-              this.form.addClass('palette-created');
-            })
-            myworker.addListener('createStarted', event => {
-              // create started, set progress mode
-              this.form.addClass('gif-generating');
-            })
-            myworker.addListener("create", msg => {
-                this.form.addClass('gif-created');
-                console.log(msg)
-                var myArray = msg.data; //= your data in a UInt8Array
-                var blob = new Blob([myArray], {'type': 'image/gif'});
-                var url = URL.createObjectURL(blob);
-                var image = document.createElement('img');
-                image.src = url;
-                document.body.appendChild(image)
-                let fileReader = new FileReader()
-                fileReader.readAsDataURL(blob)
-                var existingCache = JSON.parse(localStorage.getItem("imageCache"))
-                console.log(existingCache)
-                fileReader.onload = evt => {
-                    var result = evt.target.result;
-                    existingCache.push(result)
-                    localStorage.setItem("imageCache", JSON.stringify(existingCache))
+            for (let i in droppedFiles) {
+                if (droppedFiles[i] instanceof Blob == false) {
+                    continue
                 }
-            })
-            myworker.addListener("onReady", ready => {
-              console.log(ready)
-            })
+                let file = droppedFiles[i]
+                console.log(file)
+                this.setupWorker(new VideoWorker(file, $('<div class="worker"></div>')))
+            }
           });
     }
 }

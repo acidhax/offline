@@ -1,7 +1,7 @@
 const State = Object.freeze({
     initializing: Symbol("initializing"),
-    idle:   Symbol("idle"),
-    generatingPalette:  Symbol("generatingPalette"),
+    idle: Symbol("idle"),
+    generatingPalette: Symbol("generatingPalette"),
     generatingImage: Symbol("generatingImage"),
     complete: Symbol("complete")
 });
@@ -24,14 +24,11 @@ class VideoWorker extends EventEmitter {
 
         this.setupWorker()
 
-        var state = new BehaviorSubject(State.idle)
-        Object.assign(this, {
-            state() {
-                return state.asObservable()
-            }
-        });
-
-        this.emitStateChanges(state)
+        // this.state = new BehaviorSubject(State.idle)
+        this.state = State.idle
+        this.duration = new BehaviorSubject(0)
+        this.progress = new BehaviorSubject(0)
+        this.element = $("<div></div>")
     }
 
     onReady() {
@@ -59,7 +56,8 @@ class VideoWorker extends EventEmitter {
     }
 
     onProgress(event) {
-        this.emitEvent("progress", [event])
+        this.progress.next(ffTimestampToSeconds(event.time))
+        this.emitEvent("progress", [ffTimestampToSeconds(event.time)])
     }
 
     setupWorker() {
@@ -81,6 +79,10 @@ class VideoWorker extends EventEmitter {
                     if (progress) {
                         this.onProgress(progress)
                     }
+                } else if (msg.data.indexOf("Duration:") > -1) {
+                    let messages = msg.data.split(",")
+                    let duration = messages[0].split("Duration:")
+                    this.onDuration(duration[1].trim())
                 }
                 else {
                 //   console.log(`FFMPEG.js stderr: ${msg.data}`);
@@ -100,13 +102,23 @@ class VideoWorker extends EventEmitter {
                 worker.terminate();
                 break;
             }
-          };
-          
+          }; 
+    }
+
+    onDuration(duration) {
+        if (duration != "N/A") {
+            let seconds = ffTimestampToSeconds(duration)
+            if (seconds) {
+                this.duration.next(seconds)
+                this.emitEvent("duration", [seconds])
+            }
+        }
     }
 
     createPalette() {
+        this.state = State.generatingPalette
         this.creatingPalette = true
-        this.emitEvent("palettepaletteGenerateStarted")
+        this.emitEvent("paletteGenerateStarted")
         this.worker.postMessage({
             type: 'run',
             mounts: [{type: "MEMFS", opts: {root: "."}, mountpoint: "/data"}],
@@ -123,6 +135,7 @@ class VideoWorker extends EventEmitter {
     }
 
     createGif(paletteMemfs) {
+        this.state = State.generatingImage
         this.creatingGif = true
         this.emitEvent("createStarted")
         this.worker.postMessage({
@@ -148,7 +161,16 @@ class VideoWorker extends EventEmitter {
     }
 
     onCreatedGif(data) {
+        this.state = State.complete
         this.creatingGif = false
         this.emitEvent("create", [data])
     }
+}
+
+function ffTimestampToSeconds(duration) {
+    var a = duration.split(':'); // split it at the colons
+    // minutes are worth 60 seconds. Hours are worth 60 minutes.
+    var seconds = (+a[0]) * 60 * 60 + (+a[1]) * 60 + (+a[2]); 
+
+    return seconds
 }

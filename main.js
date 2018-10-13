@@ -9,18 +9,18 @@ if (isAdvancedUpload) {
   $form.addClass('has-advanced-upload');
 }
 
-var rhinoStorage = localStorage.getItem("imageCache"),
-    rhino = document.getElementById("imageCache");
-if (rhinoStorage) {
-    // Reuse existing Data URL from localStorage
-    JSON.parse(rhinoStorage).forEach(url => {
-      var image = document.createElement('img');
-      image.src = url;
-      document.body.appendChild(image)
-    });
-} else {
-  localStorage.setItem("imageCache", JSON.stringify([]))
-}
+// var rhinoStorage = localStorage.getItem("imageCache"),
+//     rhino = document.getElementById("imageCache");
+// if (rhinoStorage) {
+//     // Reuse existing Data URL from localStorage
+//     JSON.parse(rhinoStorage).forEach(url => {
+//       var image = document.createElement('img');
+//       image.src = url;
+//       document.body.appendChild(image)
+//     });
+// } else {
+//   localStorage.setItem("imageCache", JSON.stringify([]))
+// }
 function parseProgressLine(line) {
   var progress = {};
 
