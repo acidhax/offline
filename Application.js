@@ -6,6 +6,7 @@ class Application {
         this.form = form
         this.workerSpace = workerSpace
         this.workers = new rxjs.Subject()
+        // this.workerSpace.append($("<div></div>").loadTemplate("#encoding-template", {}))
         this.setupHandlers()
     }
 
