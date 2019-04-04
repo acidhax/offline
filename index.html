@@ -47,13 +47,14 @@
                         <div class="draganddrop">or drag and drop</div>
                     </div>
                 </form>
-            </div>
-            <div class="far-right-side">
-                <div class="worker-space">
-                
+                <div class="middle-bottom">
+                    <div class="completed-conversions"></div>
                 </div>
             </div>
         </main>
+        <div class="worker-space">
+            
+        </div>
         <script async src="main.js"></script>
         <script async src="VideoWorker.js"></script>
         <script async src="TranscodingElement.js"></script>
@@ -61,12 +62,12 @@
 
         <script type="text/html" id="processing-template">
             <div class="processing processing-template">
-                <!-- <span data-content="filename"></span>
-                <span> is currently generating the colour palette. (no progress available at this stage)</span> -->
-                <div class="image-container">
-                    <img src="placeholder.png" type="image/png" />
-                    <div class="loader"></div>
-                </div>
+                <div><span data-content="filename"></span></div>
+                <!-- <div class="loader"></div> -->
+                <!-- <span> is currently generating the colour palette. (no progress available at this stage)</span> -->
+                <!-- <div class="image-container">
+                    
+                </div> -->
                 <span>Generating Palette</span>
             </div>
         </script>

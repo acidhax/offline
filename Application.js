@@ -5,7 +5,6 @@ class Application {
     constructor(form, workerSpace) {
         this.form = form
         this.workerSpace = workerSpace
-        this.workers = new rxjs.Subject()
         // this.workerSpace.append($("<div></div>").loadTemplate("#encoding-template", {}))
         this.setupHandlers()
     }
@@ -33,10 +32,13 @@ class Application {
                 } else if (worker.state == State.generatingImage) {
                     // state updates yesh
                     console.log("Encoding progress", progress)
+                    // worker.element.remove()
                     worker.element.loadTemplate($("#encoding-template"), {
                         filename: worker.file.name,
                         percentage: percentage
                     })
+                    // console.log("worker.element", worker.element)
+                    // $(".completed-conversions").append(worker.element)
                     worker.element.find(".meter span").css("width", percentage+"%");
                 }
             })
@@ -70,10 +72,12 @@ class Application {
             var myArray = msg.data; // is a UInt8Array
             var blob = new Blob([myArray], {'type': 'image/gif'});
             var url = URL.createObjectURL(blob);
+            worker.element.remove()
             worker.element.loadTemplate("#image-element", {
                 image: url,
                 filename: worker.file.name
             })
+            $(".completed-conversions").append(worker.element)
         })
     }
 
